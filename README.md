@@ -7,10 +7,13 @@ Lesson site: http://crypto.di.uoa.gr/csec/Asphaleia_Ypologistikon_Systematon/YS1
 
 > cd ~/htdocs
 > wget http://download.openeclass.org/files/2.3/openeclass-2.3.tar.gz
+
 > tar xvzf openeclass-2.3.tar.gz
+
 > cd openeclass-2.3
 
 > find . ! -iname "*.php"|xargs chmod o+r
+
 > find . -type d|xargs chmod o+x
 
 
@@ -19,4 +22,5 @@ Lesson site: http://crypto.di.uoa.gr/csec/Asphaleia_Ypologistikon_Systematon/YS1
 Just for security issues, we changed the permissions in the following files
 
 > chmod 444 openeclass/config/config.php 
+
 > chmod 444 openeclass/install/index.php
