@@ -24,3 +24,26 @@ Just for security issues, we changed the permissions in the following files
 > chmod 444 openeclass/config/config.php 
 
 > chmod 444 openeclass/install/index.php
+
+
+### Webapp Accounts
+
+** Admin User **
+
+> Username: nikolas
+
+> Password: nucLE@r@dm1n
+
+
+** Teacher User **
+
+> Username: teacher
+
+> Password: teacher1
+
+
+** Student User **
+
+> Username: student
+
+> Password: student1
