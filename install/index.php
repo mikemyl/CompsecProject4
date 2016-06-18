@@ -60,13 +60,7 @@ if ($lang == 'english') {
 } else {
 	$install_info_file = "install_info.php";
 }
-
-if ($lang == 'el'){
-	$lang = "greek";
-}
-
 // include_messages
-
 include("../modules/lang/$lang/common.inc.php");
 $extra_messages = "../config/$lang.inc.php";
 if (file_exists($extra_messages)) {
@@ -74,7 +68,6 @@ if (file_exists($extra_messages)) {
 } else {
         $extra_messages = false;
 }
-
 include("../modules/lang/$lang/messages.inc.php");
 if ($extra_messages) {
         include $extra_messages;

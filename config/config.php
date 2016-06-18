@@ -1,27 +1,27 @@
 <?php
 /* ========================================================
  * OpeneClass 2.2 configuration file
- * Automatically created by install on 2016-06-12 18:33
+ * Automatically created by install on 2016-06-18 18:58
  * ======================================================== */
 
-$urlServer = "http://elasticthree.nuclear.crypto-class.gr/openeclass-2.3/";
-$urlAppend = "/openeclass-2.3";
-$webDir    = "/home/elasticthree/htdocs/openeclass-2.3/" ;
+$urlServer = "http://sestus.mooo.com:21001/openeclass/";
+$urlAppend = "/openeclass";
+$webDir    = "/var/www/openeclass/" ;
 
 $mysqlServer = "localhost";
-$mysqlUser = "elasticthree";
-$mysqlPassword = "8067c33cd9fd930424bd59b0059b258d56e881a9461f5c1e97276a7b31590c2e";
-$mysqlMainDb = "elasticthree";
+$mysqlUser = "root";
+$mysqlPassword = "compsec";
+$mysqlMainDb = "eclass";
 $phpMyAdminURL = "../admin/mysql/";
 $phpSysInfoURL = "../admin/sysinfo/";
-$emailAdministrator = "nbompetsis@di.uoa.gr";
-$administratorName = "Nikolas";
-$administratorSurname = "Bompetsis";
+$emailAdministrator = "";
+$administratorName = "";
+$administratorSurname = "";
 $siteName = "Open eClass";
 
-$telephone = "+30 699 999 999";
+$telephone = "+30 2xx xxxx xxx";
 $fax = "";
-$emailhelpdesk = "mmilonakis@di.uoa.gr";
+$emailhelpdesk = "";
 
 $language = "greek";
 
@@ -30,7 +30,6 @@ $InstitutionUrl = "http://www.gunet.gr/";
 $postaddress = "";
 
 $have_latex = FALSE;
-// Update `close_user_registration` variable to False
 $close_user_registration = FALSE;
 
 $persoIsActive = TRUE;
