@@ -41,6 +41,12 @@
 include '../../include/baseTheme.php';
 include '../../include/sendMail.inc.php';
 include 'auth.inc.php';
+include '../../include/xss_attach.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
+
 $nameTools = $langUserDetails;
 // Main body
 $navigation[] = array("url"=>"registration.php", "name"=> $langNewUser);
@@ -48,16 +54,32 @@ $navigation[] = array("url"=>"registration.php", "name"=> $langNewUser);
 $tool_content = "";	// Initialise $tool_content
 
 if (isset($close_user_registration) and $close_user_registration == TRUE) {
-	$tool_content .= "<div class='td_main'>$langForbidden</div>";
+	$tool_content .= "<div class='td_main'>escape_chars($langForbidden)</div>";
         draw($tool_content,0);
 	exit;
  }
- 
+
 $lang = langname_to_code($language);
 
 // display form
 if (!isset($submit)) {
 	// Main body
+	if (!isset($prenom_form) && !empty($prenom_form)) {
+		$prenom_form = escape_chars($prenom_form);
+	}
+	if (!isset($nom_form) && !empty($nom_form)) {
+		$nom_form = escape_chars($nom_form);
+	}
+	if (!isset($uname) && !empty($uname)) {
+		$uname = escape_chars($uname);
+	}
+	if (!isset($email) && !empty($email)) {
+		$email = escape_chars($email);
+	}
+	if (!isset($am) && !empty($am)) {
+		$am = escape_chars($am);
+	}
+	// $_SERVER[PHP_SELF]	= escape_chars($_SERVER[PHP_SELF]);
 	@$tool_content .= "<form action='$_SERVER[PHP_SELF]' method='post'>
 	<table width='99%' style='border: 1px solid #edecdf;'>
 	<thead>
@@ -146,7 +168,7 @@ if (!isset($submit)) {
 	if (!empty($email) and !email_seems_valid($email)) {
 		$registration_errors[] = $langEmailWrong;
 	}
-	$auth_method_settings = get_auth_settings($auth);
+	$auth_method_settings = get_auth_settings(escape_chars($auth));
 	if (!empty($auth_method_settings) and $auth != 1) {
 		$password = $auth_method_settings['auth_name'];
 	} else {
@@ -183,11 +205,11 @@ if (!isset($submit)) {
 				"$langManager $siteName \n$langTel $telephone \n" .
 				"$langEmail: $emailhelpdesk";
 		}
-	
+
 	send_mail('', '', '', $email, $emailsubject, $emailbody, $charset);
 	$registered_at = time();
 	$expires_at = time() + $durationAccount;  //$expires_at = time() + 31536000;
-	
+
 	// manage the store/encrypt process of password into database
 	$authmethods = array("2","3","4","5");
 	$uname = escapeSimple($uname);  // escape the characters: simple and double quote
@@ -216,7 +238,7 @@ if (!isset($submit)) {
 	$_SESSION['prenom'] = $prenom;
 	$_SESSION['nom'] = $nom;
 	$_SESSION['uname'] = $uname;
-	
+
 	// registration form
 	$tool_content .= "<table width='99%'><tbody><tr>" .
 			"<td class='well-done' height='60'>" .
@@ -231,7 +253,14 @@ if (!isset($submit)) {
 		foreach ($registration_errors as $error) {
 			$tool_content .= "<p>$error</p>";
 		}
+		// $_SERVER[PHP_SELF]	= escape_chars($_SERVER[PHP_SELF]);
+		// $_POST[prenom_form] = escape_chars($_POST[prenom_form]);
+		// $_POST[nom_form] = escape_chars($_POST[nom_form]);
+		// $_POST[uname] = escape_chars($_POST[uname]);
+		// $_POST[email] = escape_chars($_POST[email]);
+		// $_POST[am] = escape_chars($_POST[am]);
 		$tool_content .= "<p><a href='$_SERVER[PHP_SELF]?prenom_form=$_POST[prenom_form]&nom_form=$_POST[nom_form]&uname=$_POST[uname]&email=$_POST[email]&am=$_POST[am]'>$langAgain</a></p>" .
+		// $tool_content .= "<p><a href='$_SERVER[PHP_SELF]?prenom_form=".escape_chars($_POST[prenom_form])."&nom_form=".escape_chars($_POST[nom_form])."&uname=".escape_chars($_POST[uname])."&email=".escape_chars($_POST[email])."&am=".escape_chars($_POST[am])."'>$langAgain</a></p>" .
 					"</td></tr></tbody></table><br /><br />";
 	}
 

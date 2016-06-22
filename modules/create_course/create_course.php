@@ -31,6 +31,7 @@ $require_help = TRUE;
 $helpTopic = 'CreateCourse';
 
 include '../../include/baseTheme.php';
+include '../../include/xss_attach.php';
 require_once("../betacms_bridge/include/bcms.inc.php");
 
 $nameTools = $langCreateCourse . " (" . $langCreateCourseStep ." 1 " .$langCreateCourseStep2 . " 3)" ;
@@ -69,8 +70,11 @@ function checkrequired(which, entry, entry2) {
 <script type="text/javascript" src="$urlAppend/include/xinha/my_config.js"></script>
 hContent;
 
-$titulaire_probable="$prenom $nom";
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
 
+$titulaire_probable="$prenom $nom";
 $tool_content .= "<form method='post' name='createform' action='$_SERVER[PHP_SELF]' onsubmit=\"return checkrequired(this, 'intitule', 'titulaires');\">";
 
 // Import from BetaCMS Bridge

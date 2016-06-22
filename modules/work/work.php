@@ -42,6 +42,11 @@ $helpTopic = 'Work';
 
 include '../../include/baseTheme.php';
 include '../../include/lib/forcedownload.php';
+include '../../include/xss_attach.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
 
 $head_content = "
 <script type='text/javascript'>
@@ -353,6 +358,24 @@ function new_assignment()
 	$month	= date("m");
 	$year	= date("Y");
 
+  if (!isset($m) && !empty($m)) {
+    $m = escape_chars($m);
+  }
+  if (!isset($urlAppend) && !empty($urlAppend)) {
+    $urlAppend = escape_chars($urlAppend);
+  }
+  if (!isset($desc) && !empty($desc)) {
+    $desc = escape_chars($desc);
+  }
+  if (!isset($langAdd) && !empty($langAdd)) {
+    $langAdd = escape_chars($langAdd);
+  }
+  if (!isset($end_cal_Work) && !empty($end_cal_Work)) {
+    $end_cal_Work = escape_chars($end_cal_Work);
+  }
+  if (!isset($langBack) && !empty($langBack)) {
+    $langBack = escape_chars($langBack);
+  }
 
 	$tool_content .= "
   <form action='work.php' method='post' onsubmit='return checkrequired(this, \"title\");'>
@@ -440,6 +463,14 @@ function show_edit_assignment($id)
 	global $urlAppend;
 	global $end_cal_Work_db;
 
+  $id = escape_chars($id);
+  $m = escape_chars($m);
+  $langEdit = escape_chars($langEdit);
+  $langWorks = escape_chars($langWorks);
+  $langBack = escape_chars($langBack);
+  $urlAppend = escape_chars($urlAppend);
+  $end_cal_Work_db = escape_chars($end_cal_Work_db);
+
 	$res = db_query("SELECT * FROM assignments WHERE id = '$id'");
 	$row = mysql_fetch_array($res);
 
@@ -452,7 +483,7 @@ function show_edit_assignment($id)
 	$description = q($row['description']);
 	$tool_content .= <<<cData
     <form action="$_SERVER[PHP_SELF]" method="post" onsubmit="return checkrequired(this, 'title');">
-    <input type="hidden" name="id" value="$id" />
+    <input type="hidden" name="id" value="escape_chars($id)" />
     <input type="hidden" name="choice" value="do_edit" />
     <table width="99%" class="FormData">
     <tbody>
@@ -524,6 +555,7 @@ cData;
 function edit_assignment($id)
 {
 	global $tool_content, $langBackAssignment, $langEditSuccess, $langEditError, $langWorks, $langEdit;
+  $id = escape_chars($id);
 
 	$nav[] = array("url"=>"work.php", "name"=> $langWorks);
 	$nav[] = array("url"=>"work.php?id=$id", "name"=> $_POST['title']);
@@ -544,6 +576,7 @@ function edit_assignment($id)
 function delete_assignment($id) {
 
 	global $tool_content, $workPath, $currentCourseID, $webDir, $langBack, $langDeleted;
+  $id = escape_chars($id);
 
 	$secret = work_secret($id);
 	db_query("DELETE FROM assignments WHERE id='$id'");
@@ -563,6 +596,10 @@ function show_student_assignment($id)
 {
 	global $tool_content, $m, $uid, $langSubmitted, $langSubmittedAndGraded, $langNotice3,
 	$langWorks, $langUserOnly, $langBack, $langWorkGrade, $langGradeComments;
+
+  if (!isset($id) && !empty($id)) {
+    $id = escape_chars($id);
+  }
 
 	$res = db_query("SELECT *, (TO_DAYS(deadline) - TO_DAYS(NOW())) AS days
 		FROM assignments WHERE id = '$id'");
@@ -652,7 +689,9 @@ function assignment_details($id, $row, $message = null)
 	global $tool_content, $m, $langDaysLeft, $langDays, $langWEndDeadline, $langNEndDeadLine, $langNEndDeadline, $langEndDeadline;
 	global $langDelAssign, $is_adminOfCourse, $langZipDownload, $langSaved ;
 
-
+  if (!isset($id) && !empty($id)) {
+    $id = escape_chars($id);
+  }
 	if ($is_adminOfCourse) {
 	$tool_content .= "
     <div id=\"operations_container\">
@@ -767,7 +806,9 @@ function show_assignment($id, $message = FALSE)
 	global $tool_content, $m, $langBack, $langNoSubmissions, $langSubmissions, $mysqlMainDb, $langWorks;
 	global $langEndDeadline, $langWEndDeadline, $langNEndDeadline, $langDays, $langDaysLeft, $langGradeOk;
 	global $currentCourseID, $webDir, $urlServer, $nameTools, $langGraphResults, $m;
-
+  if (!isset($id) && !empty($id)) {
+    $id = escape_chars($id);
+  }
 	$res = db_query("SELECT *, (TO_DAYS(deadline) - TO_DAYS(NOW())) AS days FROM assignments WHERE id = '$id'");
 	$row = mysql_fetch_array($res);
 
@@ -803,7 +844,7 @@ function show_assignment($id, $message = FALSE)
 		WHERE assign.assignment_id='$id' AND user.user_id = assign.uid
 		ORDER BY $order $rev");
 
-	/*  The query is changed (AND assign.grade<>'' is appended) in order to constract the chart of 
+	/*  The query is changed (AND assign.grade<>'' is appended) in order to constract the chart of
 	 * grades distribution according to the graded works only (works that are not graded are omitted). */
 	$numOfResults = db_query("SELECT *
 		FROM `$GLOBALS[code_cours]`.assignment_submit AS assign,
@@ -811,7 +852,7 @@ function show_assignment($id, $message = FALSE)
 		WHERE assign.assignment_id='$id' AND user.user_id = assign.uid AND assign.grade<>''
 		ORDER BY $order $rev");
 	$num_resultsForChart = mysql_num_rows($numOfResults);
-	
+
 	$num_results = mysql_num_rows($result);
 	if ($num_results > 0) {
 		if ($num_results == 1) {
@@ -1174,7 +1215,7 @@ function submit_grade_comments($id, $sid, $grade, $comment)
 
 	$stupid_user = 0;
 
-	/*  If check expression is changed by nikos, in order to give to teacher the ability to 
+	/*  If check expression is changed by nikos, in order to give to teacher the ability to
 	 * assign comments to a work without assigning grade. */
 	if (!is_numeric($grade) && '' != $grade ) {
 		$tool_content .= $langWorkWrongInput;

@@ -43,8 +43,14 @@ $require_prof = true;
 
 include '../../include/baseTheme.php';
 include '../../include/lib/textLib.inc.php';
+include '../../include/xss_attach.php';
+
 // support for math symbols
 include '../../include/phpmathpublisher/mathpublisher.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
 
 $tool_content = $head_content = "";
 $nameTools = $langEditCourseProgram ;
@@ -122,7 +128,7 @@ if ($is_adminOfCourse) {
                 }
 
                 $tool_content .= "<form method='post' action='$_SERVER[PHP_SELF]'>
-                        <input type='hidden' name='edIdBloc' value='$numBloc' />
+                        <input type='hidden' name='edIdBloc' value='escape_chars($numBloc)' />
                         <table width='99%' class='FormData' align='left'><tbody>
                            <tr><th class='left' width='220'>$langTitle:</th>
                                <td><b>$title</b>";
@@ -137,7 +143,7 @@ if ($is_adminOfCourse) {
                 $tool_content .= "
                         <tr><th class='left'>&nbsp;</th>
                             <td><table class='xinha_editor'>
-                            <tr><td><textarea id='xinha' name='edContentBloc'>" . 
+                            <tr><td><textarea id='xinha' name='edContentBloc'>" .
                                 q(@$contentBloc) . "</textarea></td></tr></table></td></tr>
                         <tr><th class='left'>&nbsp;</th>
                             <td><input type='submit' name='save' value='$langAdd' />&nbsp;&nbsp;

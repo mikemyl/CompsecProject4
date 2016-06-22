@@ -40,6 +40,12 @@ $require_current_course = TRUE;
 $require_login = true;
 
 include "../../include/baseTheme.php";
+include '../../include/xss_attach.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
+
 $tool_content = "";
 
 if($is_adminOfCourse) {
@@ -47,7 +53,7 @@ if($is_adminOfCourse) {
 	if(!isset($_REQUEST['uploadPath'])) {
 		$_REQUEST['uploadPath'] = "";
 	}
-	
+
 	$nameTools = $langDownloadFile;
 	$navigation[]= array ("url"=>"document.php", "name"=> $langDoc);
 	$tool_content .= "
