@@ -45,7 +45,7 @@ include '../../include/lib/forcedownload.php';
 include '../../include/xss_attach.php';
 
 if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
-    die('CSRF! Not allowed!');
+    die("CSRF! Not allowed!");
 }
 
 $head_content = "
@@ -293,10 +293,6 @@ function submit_work($id) {
 
 		}
 	} //checks for submission validity end here
-        if (isRarOrZip($_FILES['userfile']['name'])==FALSE){
-            echo 'Only Compressed Files (Rar | Zip) are allowed';
-            $submit_ok = FALSE;
-    }
 
 
   	$res = db_query("SELECT title FROM assignments WHERE id = '$id'");
@@ -324,6 +320,9 @@ function submit_work($id) {
         $ext = get_file_extension($_FILES['userfile']['name']);
 	$filename = "$secret/$local_name" . (empty($ext)? '': '.' . $ext);
 	if (move_uploaded_file($_FILES['userfile']['tmp_name'], "$workPath/$filename")) {
+        if (isRarOrZip("$workPath/$filename") == FALSE ) {
+            die("Only Compressed Files (Rar | Zip) are allowed");
+        }
 		$msg2 = "$langUploadSuccess";//to message
 		$group_id = user_group($uid, FALSE);
 		if ($group_sub == 'yes' and !was_submitted(-1, $group_id, $id)) {
