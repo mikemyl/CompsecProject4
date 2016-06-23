@@ -216,7 +216,7 @@ if ($is_adminOfCourse) { // course admin
 		// Gotta handle private forums right here. They're naturally covered on submit, but not in this part.
 		$sql = "SELECT f.forum_type, f.forum_name, t.topic_title
 			FROM forums f, topics t
-			WHERE (f.forum_id = '$forum') AND (t.topic_id = $topic) AND (t.forum_id = f.forum_id)";
+			WHERE (f.forum_id = '$forum') AND (t.topic_id = '" . mysql_real_escape_string($topc) . "') AND (t.forum_id = f.forum_id)";
 		
 		if (!$result = db_query($sql, $currentCourseID)) {
 			$tool_content .= "$langTopicInformation";

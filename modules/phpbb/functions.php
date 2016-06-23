@@ -847,7 +847,7 @@ function get_syslang_string($sys_lang, $string) {
 function sync($thedb, $id, $type) {
    switch($type) {
    	case 'forum':
-   		$sql = "SELECT max(post_id) AS last_post FROM posts WHERE forum_id = $id";
+   		$sql = "SELECT max(post_id) AS last_post FROM posts WHERE forum_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not get post ID");
@@ -857,7 +857,7 @@ function sync($thedb, $id, $type) {
    			$last_post = $row["last_post"];
    		}
    		
-   		$sql = "SELECT count(post_id) AS total FROM posts WHERE forum_id = $id";
+   		$sql = "SELECT count(post_id) AS total FROM posts WHERE forum_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not get post count");
@@ -867,7 +867,7 @@ function sync($thedb, $id, $type) {
    			$total_posts = $row["total"];
    		}
    		
-   		$sql = "SELECT count(topic_id) AS total FROM topics WHERE forum_id = $id";
+   		$sql = "SELECT count(topic_id) AS total FROM topics WHERE forum_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not get topic count");
@@ -879,7 +879,7 @@ function sync($thedb, $id, $type) {
    		
    		$sql = "UPDATE forums
 			SET forum_last_post_id = '$last_post', forum_posts = $total_posts, forum_topics = $total_topics
-			WHERE forum_id = $id";
+			WHERE forum_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not update forum $id");
@@ -887,7 +887,7 @@ function sync($thedb, $id, $type) {
    	break;
 
    	case 'topic':
-   		$sql = "SELECT max(post_id) AS last_post FROM posts WHERE topic_id = $id";
+   		$sql = "SELECT max(post_id) AS last_post FROM posts WHERE topic_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not get post ID");
@@ -897,7 +897,7 @@ function sync($thedb, $id, $type) {
    			$last_post = $row["last_post"];
    		}
    		
-   		$sql = "SELECT count(post_id) AS total FROM posts WHERE topic_id = $id";
+   		$sql = "SELECT count(post_id) AS total FROM posts WHERE topic_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not get post count");
@@ -907,7 +907,7 @@ function sync($thedb, $id, $type) {
    			$total_posts = $row["total"];
    		}
    		$total_posts -= 1;
-   		$sql = "UPDATE topics SET topic_replies = $total_posts, topic_last_post_id = $last_post WHERE topic_id = $id";
+   		$sql = "UPDATE topics SET topic_replies = $total_posts, topic_last_post_id = $last_post WHERE topic_id = '" . mysql_real_escape_string($id) . "'";
    		if(!$result = db_query($sql, $thedb))
    		{
    			error_die("Could not update topic $id");
@@ -988,7 +988,7 @@ function forum_category($id) {
 	
 	global $currentCourseID;
 	
-	if ($r = mysql_fetch_row(db_query("SELECT cat_id FROM forums WHERE forum_id=$id", $currentCourseID))) {
+	if ($r = mysql_fetch_row(db_query("SELECT cat_id FROM forums WHERE forum_id='" . mysql_real_escape_string($id) . "'", $currentCourseID))) {
 		return $r[0];
 	} else {
 		return FALSE;
@@ -1000,7 +1000,7 @@ function category_name($id) {
 	
 	global $currentCourseID;
 	
-	if ($r = mysql_fetch_row(db_query("SELECT cat_title FROM catagories WHERE cat_id=$id", $currentCourseID))) {
+	if ($r = mysql_fetch_row(db_query("SELECT cat_title FROM catagories WHERE cat_id='" . mysql_real_escape_string($id) . "'", $currentCourseID))) {
 		return $r[0];
 	} else {
 		return FALSE;

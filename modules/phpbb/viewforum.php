@@ -144,13 +144,13 @@ if ($total_topics > $topics_per_page) { // navigation
 
 if(isset($topicnotify)) { // modify topic notification
 	$rows = mysql_num_rows(db_query("SELECT * FROM forum_notify 
-		WHERE user_id = $uid AND topic_id = $topic_id AND course_id = $cours_id", $mysqlMainDb));
+		WHERE user_id = '" . mysql_real_escape_string($uid) . "' AND topic_id = '" . mysql_real_escape_string($topic_id) . "' AND course_id = '" . mysql_real_escape_string($cours_id) . "'", $mysqlMainDb));
 	if ($rows > 0) {
 		db_query("UPDATE forum_notify SET notify_sent = '$topicnotify' 
-			WHERE user_id = $uid AND topic_id = $topic_id AND course_id = $cours_id", $mysqlMainDb);
+			WHERE user_id = '" . mysql_real_escape_string($uid) . "' AND topic_id = '" . mysql_real_escape_string($topic_id) . "' AND course_id = '" . mysql_real_escape_string($cours_id) . "'", $mysqlMainDb);
 	} else {
-		db_query("INSERT INTO forum_notify SET user_id = $uid,
-		topic_id = $topic_id, notify_sent = 1, course_id = $cours_id", $mysqlMainDb);
+		db_query("INSERT INTO forum_notify SET user_id = '" . mysql_real_escape_string($uid) . "',
+		topic_id = '" . mysql_real_escape_string($topic_id) . "', notify_sent = 1, course_id = '" . mysql_real_escape_string($cours_id) . "'", $mysqlMainDb);
 	}
 }
 
@@ -238,7 +238,7 @@ if (mysql_num_rows($result) > 0) { // topics found
 		$tool_content .= "<td class='Forum_leftside'>$myrow[topic_views]</td>\n";
 		$tool_content .= "<td class='Forum_leftside1'>$myrow[prenom1] $myrow[nom1]<br />$last_post</td>";
 		list($topic_action_notify) = mysql_fetch_row(db_query("SELECT notify_sent FROM forum_notify 
-			WHERE user_id = $uid AND topic_id = $myrow[topic_id] AND course_id = $cours_id", $mysqlMainDb));
+			WHERE user_id = '" . mysql_real_escape_string($uid) . "' AND topic_id = $myrow[topic_id] AND course_id = '" . mysql_real_escape_string($cours_id) . "'", $mysqlMainDb));
 		if (!isset($topic_action_notify)) {
 			$topic_link_notify = FALSE;
 			$topic_icon = '_off';
