@@ -41,6 +41,12 @@ $nameTools = $dropbox_lang["dropbox"];
 
 /**** The following is added for statistics purposes ***/
 include('../../include/action.php');
+include '../../include/xss_attach.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
+
 $action = new action();
 $action->record('MODULE_ID_DROPBOX');
 /**************************************/
@@ -48,7 +54,7 @@ $action->record('MODULE_ID_DROPBOX');
 $tool_content .="
 <div id=\"operations_container\">
   <ul id=\"opslist\">
-    <li><a href=\"".$_SERVER['PHP_SELF']."?upload=1\">".$dropbox_lang['uploadFile']."</a></li>
+    <li><a href=\"".$_SERVER['PHP_SELF']."?upload=1\">".escape_chars($dropbox_lang['uploadFile'])."</a></li>
   </ul>
 </div>";
 
@@ -112,11 +118,12 @@ $dropbox_unid = md5(uniqid(rand(), true));	//this var is used to give a unique v
 if (isset($_GET['mailing']))  // RH: Mailing detail: no form upload
 {
 	$tool_content .= "<h3>". htmlspecialchars(getUserNameFromId($_GET['mailing'])). "</h3>";
-	$tool_content .= "<a href='index.php'>".$dropbox_lang["mailingBackToDropbox"].'</a><br><br>';
+	$tool_content .= "<a href='index.php'>".escape_chars($dropbox_lang["mailingBackToDropbox"]).'</a><br><br>';
 }
 elseif(isset($_REQUEST['upload']) && $_REQUEST['upload'] == 1)
 {
-
+  $token = md5(uniqid(rand(), TRUE));
+  $_SESSION['token'] = $token;
 	$tool_content .= <<<tCont2
     <form method="post" action="dropbox_submit.php" enctype="multipart/form-data" onsubmit="return checkForm(this)">
 tCont2;
@@ -125,12 +132,12 @@ tCont2;
     <tbody>
     <tr>
       <th class='left' width='220'>&nbsp;</th>
-      <td><b>".$dropbox_lang["uploadFile"]."</b></td>
+      <td><b>".escape_chars($dropbox_lang["uploadFile"])."</b></td>
     </tr>
     <tr>
-      <th class='left'>".$dropbox_lang['file']." :</th>
+      <th class='left'>".escape_chars($dropbox_lang['file'])." :</th>
       <td><input type='file' name='file' size='35' />
-          <input type='hidden' name='dropbox_unid' value='$dropbox_unid' />
+          <input type='hidden' name='dropbox_unid' value='escape_chars($dropbox_unid)' />
       </td>
     </tr>";
 
@@ -147,10 +154,10 @@ tCont2;
 	$tool_content .= "
     <tr>
       <th class='left'>".$dropbox_lang["authors"]." :</th>
-      <td><input type='text' name='authors' value='".getUserNameFromId($uid)."' size='40' class='FormData_InputText' /></td>
+      <td><input type='text' name='authors' value='".getUserNameFromId(escape_chars($uid))."' size='40' class='FormData_InputText' /></td>
     </tr>
     <tr>
-      <th class='left'>".$dropbox_lang["description"]." :</th>
+      <th class='left'>".escape_chars($dropbox_lang["description"])." :</th>
       <td><textarea name='description' cols='37' rows='2' class='FormData_InputText'></textarea></td>
     </tr>
     <tr>
@@ -201,7 +208,7 @@ tCont2;
 	if ($dropbox_cnf["allowJustUpload"])  // RH
 	{
 		$tool_content .= '
-           <option value="0">'.$dropbox_lang["justUploadInSelect"].'</option>';
+           <option value="0">'.escape_chars($dropbox_lang["justUploadInSelect"]).'</option>';
 	}
 
 	$tool_content .= "
@@ -210,6 +217,7 @@ tCont2;
     </tr>
     <tr>
       <th>&nbsp;</th>
+          <input type='hidden' name='token' value='$token' />
       <td><input type='Submit' name='submitWork' value='".$dropbox_lang["ok"]."' /></td>
     </tr>
     </tbody>
@@ -503,4 +511,3 @@ if (count($dropbox_person->sentWork)==0) {
 $tool_content .= "</tbody></table>";
 add_units_navigation(TRUE);
 draw($tool_content, 2, 'dropbox', $head_content);
-

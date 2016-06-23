@@ -155,29 +155,31 @@ if ($is_adminOfCourse) {
 		submit_grades($grades_id, $grades);
 	} elseif (isset($id)) {
 		if (isset($choice)) {
-			if ($choice == 'disable') {
-				db_query("UPDATE assignments SET active = '0' WHERE id = '$id'");
-				show_assignments($langAssignmentDeactivated);
-			} elseif ($choice == 'enable') {
-				db_query("UPDATE assignments SET active = '1' WHERE id = '$id'");
-				show_assignments($langAssignmentActivated);
-			} elseif ($choice == 'delete') {
-				die("invalid option");
-			} elseif ($choice == "do_delete") {
-				$nameTools = $m['WorkDelete'];
-				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
-				delete_assignment($id);
-			} elseif ($choice == 'edit') {
-				$nameTools = $m['WorkEdit'];
-				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
-				show_edit_assignment($id);
-			} elseif ($choice == 'do_edit') {
-				$nameTools = $m['WorkView'];
-				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
-				edit_assignment($id);
-			} elseif ($choice = 'plain') {
-				show_plain_view($id);
-			}
+      if ($_POST['token'] == $_SESSION['token']){
+  			if ($choice == 'disable') {
+  				db_query("UPDATE assignments SET active = '0' WHERE id = '$id'");
+  				show_assignments($langAssignmentDeactivated);
+  			} elseif ($choice == 'enable') {
+  				db_query("UPDATE assignments SET active = '1' WHERE id = '$id'");
+  				show_assignments($langAssignmentActivated);
+  			} elseif ($choice == 'delete') {
+  				die("invalid option");
+  			} elseif ($choice == "do_delete") {
+  				$nameTools = $m['WorkDelete'];
+  				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
+  				delete_assignment($id);
+  			} elseif ($choice == 'edit') {
+  				$nameTools = $m['WorkEdit'];
+  				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
+  				show_edit_assignment($id);
+  			} elseif ($choice == 'do_edit') {
+  				$nameTools = $m['WorkView'];
+  				$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
+  				edit_assignment($id);
+  			} elseif ($choice = 'plain') {
+  				show_plain_view($id);
+  			}
+      }
 		} else {
 			$nameTools = $m['WorkView'];
 			$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
@@ -190,7 +192,7 @@ if ($is_adminOfCourse) {
 	}
 } else {
 	if (isset($id)) {
-		if (isset($work_submit)) {
+		if (isset($work_submit) && ($_POST['token'] == $_SESSION['token'])) {
 			$nameTools = $m['SubmissionStatusWorkInfo'];
 			$navigation[] = array("url"=>"work.php", "name"=> $langWorks);
 			$navigation[] = array("url"=>"work.php?id=$id", "name"=>$m['WorkView']);
@@ -468,6 +470,9 @@ function show_edit_assignment($id)
 	global $urlAppend;
 	global $end_cal_Work_db;
 
+  $token = md5(uniqid(rand(), TRUE));
+  $_SESSION['token'] = $token;
+
   $id = escape_chars($id);
   $m = escape_chars($m);
   $langEdit = escape_chars($langEdit);
@@ -544,6 +549,7 @@ cData;
     </tr>
     <tr>
       <th class='left'>&nbsp;</th>
+      <input type='hidden' name='token' value='$token' />
       <td><input type='submit' name='do_edit' value='$langEdit' /></td>
     </tr>
     </tbody>
@@ -648,7 +654,8 @@ function show_student_assignment($id)
 function show_submission_form($id)
 {
 	global $tool_content, $m, $langWorkFile, $langSendFile, $langSubmit, $uid, $langNotice3;
-
+  $token = md5(uniqid(rand(), TRUE));
+  $_SESSION['token'] = $token;
 	if (is_group_assignment($id) and ($gid = user_group($uid))) {
 		$tool_content .= "<p>$m[this_is_group_assignment] ".
 		"<a href='../group/document.php?userGroupId=$gid'>".
@@ -675,6 +682,7 @@ function show_submission_form($id)
     </tr>
     <tr>
       <th>&nbsp;</th>
+      <input type='hidden' name='token' value='$token' />
       <td><input type="submit" value="${langSubmit}" name="work_submit" /><br />$langNotice3</td>
     </tr>
     </tbody>
@@ -1394,4 +1402,3 @@ function isRarOrZip($file) {
             return FALSE;
         }
 }
-

@@ -58,6 +58,7 @@ $require_help = TRUE;
 $helpTopic = 'For';
 include '../../include/baseTheme.php';
 include '../../include/sendMail.inc.php';
+include '../../include/xss_attach.php';
 
 $tool_content = "";
 $lang_editor = langname_to_code($language);
@@ -70,9 +71,12 @@ $head_content = <<<hContent
 <script type="text/javascript" src="$urlAppend/include/xinha/my_config.js"></script>
 hContent;
 
-
 include_once("./config.php");
 include("functions.php");
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
 
 if (isset($post_id) && $post_id) {
 	// We have a post id, so include that in the checks..
@@ -85,7 +89,7 @@ if (isset($post_id) && $post_id) {
 	// No post id, just check forum and topic.
 	$sql = "SELECT f.forum_type, f.forum_name, f.forum_access, t.topic_title ";
 	$sql .= "FROM forums f, topics t ";
-	$sql .= "WHERE (f.forum_id = '$forum') AND (t.topic_id = '" . mysql_real_escape_string($topic) . "') AND (t.forum_id = f.forum_id)";	
+	$sql .= "WHERE (f.forum_id = '$forum') AND (t.topic_id = '" . mysql_real_escape_string($topic) . "') AND (t.forum_id = f.forum_id)";
 }
 
 $result = db_query($sql, $currentCourseID);
@@ -109,9 +113,10 @@ if (!does_exists($forum, $currentCourseID, "forum") || !does_exists($topic, $cur
 	exit();
 }
 
-if (isset($submit) && $submit) {
+if (isset($submit) && $submit && ($_POST['token'] == $_SESSION['token'])) {
 	if (trim($message) == '') {
 		$tool_content .= $langEmptyMsg;
+    $message = escape_chars($message);
 		draw($tool_content, 2, 'phpbb', $head_content);
 		exit();
 	}
@@ -146,12 +151,14 @@ if (isset($submit) && $submit) {
 	$is_html_disabled = false;
 	if ( (isset($allow_html) && $allow_html == 0) || isset($html)) {
 		$message = htmlspecialchars($message);
+    $message = escape_chars($message);
 		$is_html_disabled = true;
 		if (isset($quote) && $quote) {
 			$edit_by = get_syslang_string($sys_lang, "l_editedby");
 			// If it's been edited more than once, there might be old "edited by" strings with
 			// escaped HTML code in them. We want to fix this up right here:
 			$message = preg_replace("#&lt;font\ size\=-1&gt;\[\ $edit_by(.*?)\ \]&lt;/font&gt;#si", '[ ' . $edit_by . '\1 ]', $message);
+      $message = escape_chars($message);
 		}
 	}
 	if ( (isset($allow_bbcode) && $allow_bbcode == 1) && !isset($bbcode)) {
@@ -173,12 +180,12 @@ if (isset($submit) && $submit) {
 	if ($this_post) {
 		$sql = "INSERT INTO posts_text (post_id, post_text) VALUES ($this_post, " .
                         autoquote($message) . ")";
-		$result = db_query($sql, $currentCourseID); 
+		$result = db_query($sql, $currentCourseID);
 	}
-	$sql = "UPDATE topics SET topic_replies = topic_replies+1, topic_last_post_id = $this_post, topic_time = '$time' 
+	$sql = "UPDATE topics SET topic_replies = topic_replies+1, topic_last_post_id = $this_post, topic_time = '$time'
 		WHERE topic_id = '$topic'";
 	$result = db_query($sql, $currentCourseID);
-	$sql = "UPDATE forums SET forum_posts = forum_posts+1, forum_last_post_id = '$this_post' 
+	$sql = "UPDATE forums SET forum_posts = forum_posts+1, forum_last_post_id = '$this_post'
 		WHERE forum_id = '$forum'";
 	$result = db_query($sql, $currentCourseID);
 	if (!$result) {
@@ -186,15 +193,15 @@ if (isset($submit) && $submit) {
 		draw($tool_content, 2, 'phpbb', $head_content);
 		exit();
 	}
-	
+
 	// --------------------------------
-	// notify users 
+	// notify users
 	// --------------------------------
 	$subject_notify = "$logo - $langSubjectNotify";
 	$category_id = forum_category($forum);
 	$cat_name = category_name($category_id);
-	$sql = db_query("SELECT DISTINCT user_id FROM forum_notify 
-			WHERE (topic_id = '" . mysql_real_escape_string($topic) . "' OR forum_id = '" . mysql_real_escape_string($forum) . "' OR cat_id = '" . mysql_real_escape_string($category_id) . "') 
+	$sql = db_query("SELECT DISTINCT user_id FROM forum_notify
+			WHERE (topic_id = '" . mysql_real_escape_string($topic) . "' OR forum_id = '" . mysql_real_escape_string($forum) . "' OR cat_id = '" . mysql_real_escape_string($category_id) . "')
 			AND notify_sent = 1 AND course_id = $cours_id", $mysqlMainDb);
 	$c = course_code_to_title($currentCourseID);
 	$body_topic_notify = "$langCourse: '$c'\n\n$langBodyTopicNotify $langInForum '$topic_title' $langOfForum '$forum_name' $langInCat '$cat_name' \n\n$gunet";
@@ -203,7 +210,7 @@ if (isset($submit) && $submit) {
 		send_mail('', '', '', $emailaddr, $subject_notify, $body_topic_notify, $charset);
 	}
 	// end of notification
-	 
+
 	$total_forum = get_total_topics($forum, $currentCourseID);
 	$total_topic = get_total_posts($topic, $currentCourseID, "topic")-1;
 	// Subtract 1 because we want the nr of replies, not the nr of posts.
@@ -213,7 +220,7 @@ if (isset($submit) && $submit) {
 	<li><a href=\"viewtopic.php?topic=$topic&forum=$forum&$total_topic\">$langViewMessage</a></li>
 	<li><a href=\"viewforum.php?forum=$forum&$total_forum\">$langReturnTopic</a></li>
 	</ul></div><br />";
-	
+
 	$tool_content .= "<table width=\"99%\"><tbody><tr>
 	<td class=\"success\">$langStored</td>
 	</tr></tbody></table>";
@@ -253,7 +260,7 @@ if (isset($submit) && $submit) {
 			}
 			// Ok, looks like we're good.
 		}
-	}	
+	}
 	// Topic review
 	$tool_content .= "<div id=\"operations_container\">
 	<ul id=\"opslist\">
@@ -269,18 +276,20 @@ if (isset($submit) && $submit) {
 	<tr>
         <th class=\"left\">$langBodyMessage:";
 	if (isset($quote) && $quote) {
-		$sql = "SELECT pt.post_text, p.post_time, u.username 
-			FROM posts p, posts_text pt 
+		$sql = "SELECT pt.post_text, p.post_time, u.username
+			FROM posts p, posts_text pt
 			WHERE p.post_id = '$post' AND pt.post_id = p.post_id";
 		if ($r = db_query($sql, $currentCourseID)) {
 			$m = mysql_fetch_array($r);
 			$text = $m["post_text"];
+      $text = escape_chars($text);
 			$text = str_replace("<BR>", "\n", $text);
 			$text = stripslashes($text);
 			$text = bbdecode($text);
 			$text = undo_make_clickable($text);
 			$text = str_replace("[addsig]", "", $text);
 			$syslang_quotemsg = get_syslang_string($sys_lang, "langQuoteMsg");
+      $syslang_quotemsg = escape_chars($syslang_quotemsg);
 			eval("\$reply = \"$syslang_quotemsg\";");
 		} else {
 			$tool_content .= $langErrorConnectForumDatabase;
@@ -294,6 +303,8 @@ if (isset($submit) && $submit) {
 	if (!isset($quote)) {
 		$quote = "";
 	}
+  $token = md5(uniqid(rand(), TRUE));
+  $_SESSION['token'] = $token;
 	$tool_content .= "</th><td valign='top'>
 	<table class='xinha_editor'>
 	<tr>
@@ -307,6 +318,7 @@ if (isset($submit) && $submit) {
 	<input type='hidden' name='forum' value='$forum'>
 	<input type='hidden' name='topic' value='$topic'>
 	<input type='hidden' name='quote' value='$quote'>
+  <input type='hidden' name='token' value='$token' />
 	<input type='submit' name='submit' value='$langSubmit'>&nbsp;
 	<input type='submit' name='cancel' value='$langCancelPost'>
 	</td>
@@ -316,4 +328,3 @@ if (isset($submit) && $submit) {
 }
 
 draw($tool_content, 2, 'phpbb', $head_content);
-

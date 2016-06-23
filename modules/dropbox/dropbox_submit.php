@@ -83,7 +83,7 @@ require_once("dropbox_class.inc.php");
  * - VALIDATE POSTED DATA
  * - UPLOAD NEW FILE
  */
-if (isset($_POST["submitWork"]))
+if (isset($_POST["submitWork"]) && $_POST['token'] == $_SESSION['token'])
 {
 	require("../../include/lib/fileUploadLib.inc.php");
 
@@ -216,6 +216,9 @@ if (!isset( $_POST['authors']) || !isset( $_POST['description']))
 		$tool_content .=  "<b><font color='#FF0000'>".$errormsg."</font></b><br><br>";
 	}
 }
+// else{
+// 	die('CSRF attack! Not allowed!');
+// }
 
 
 /*

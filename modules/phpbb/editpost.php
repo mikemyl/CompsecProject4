@@ -75,15 +75,11 @@ hContent;
 include_once("./config.php");
 include("functions.php"); // application logic for phpBB
 
-if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
-    die('CSRF! Not allowed!');
-}
-
 /******************************************************************************
  * Actual code starts here
  *****************************************************************************/
 if ($is_adminOfCourse) { // course admin
-	if (isset($submit) && $submit) {
+	if (isset($submit) && $submit &&  ($_POST['token'] == $_SESSION['token'])) {
 		$sql = "SELECT * FROM posts WHERE post_id = '$post_id'";
 		if (!$result = db_query($sql, $currentCourseID)) {
 			$tool_content .= $langErrorDataOne;
@@ -332,15 +328,17 @@ if ($is_adminOfCourse) { // course admin
 		if($first_post) {
 			$tool_content .= "<tr>
 			<th class='left'>$langSubject:</th>
-			<td><input type='text' name='subject' size='53' maxlength='100' value='" . stripslashes($myrow["topic_title"]) . "'  class='FormData_InputText' /></td>
+			<td><input type='text' name='subject' size='53' maxlength='100' value='" . stripslashes(escape_chars($myrow["topic_title"])) . "'  class='FormData_InputText' /></td>
 			</tr>";
 		}
+    $token = md5(uniqid(rand(), TRUE));
+    $_SESSION['token'] = $token;
 		$tool_content .= "<tr><th class='left'>$langBodyMessage:</th>
 		<td>
 		<table class='xinha_editor'>
 		<tr>
 		<td>
-		<textarea id='xinha' name='message' rows='10' cols='50' class='FormData_InputText'>" . q($message) . "</textarea>
+		<textarea id='xinha' name='message' rows='10' cols='50' class='FormData_InputText'>" . q(escape_chars($message)) . "</textarea>
 		</td></tr></table>
 		</td>
 		</tr>
@@ -354,6 +352,7 @@ if ($is_adminOfCourse) { // course admin
 		<input type='hidden' name='post_id' value='$post_id' />
 		<input type='hidden' name='forum' value='$forum' />
 		<input type='submit' name='submit' value='$langSubmit' />
+    <input type='hidden' name='token' value='$token' />
 		</td></tr>
 		</tbody></table></form>";
 	}

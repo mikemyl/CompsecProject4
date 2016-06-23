@@ -29,6 +29,11 @@ $require_help = TRUE;
 $helpTopic = 'Conference';
 $tool_content = "";
 include '../../include/baseTheme.php';
+include '../../include/xss_attach.php';
+
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
 
 if(!isset($MCU))
 	$MCU="";
@@ -48,12 +53,14 @@ if (check_guest()) {
        <table width=\"99%\">
        <tbody>
        <tr>
-         <td class=\"extraMessage\"><p>$langNoGuest</p></td>
+         <td class=\"extraMessage\"><p>escape_chars($langNoGuest)</p></td>
        </tr>
        </tbody>
        </table>";
 	draw($tool_content, 2, 'conference');
 }
+
+$uid = escape_chars($uid);
 
 if (!($uid) or !($_SESSION['uid'])) {
 	$tool_content .= "
