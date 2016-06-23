@@ -212,7 +212,7 @@ if ($total_categories) {
 				$forum = $forum_row[$x]["forum_id"];
 				if ($is_adminOfCourse) { // admin
 					$sqlTutor = db_query("SELECT id FROM student_group
-						WHERE forumId='$forum' AND tutor=''" . mysql_real_escape_string($uid) . "''", $currentCourseID );
+						WHERE forumId='$forum' AND tutor='" . mysql_real_escape_string($uid) . "'", $currentCourseID );
 					$countTutor = mysql_num_rows($sqlTutor);
 					if ($countTutor == 0) {
 						$tool_content .= "<a href='viewforum.php?forum=" . $forum . "'>$name</a>";

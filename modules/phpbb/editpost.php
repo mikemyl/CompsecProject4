@@ -60,6 +60,7 @@ $require_current_course = TRUE;
 $require_login = TRUE;
 $require_help = FALSE;
 include '../../include/baseTheme.php';
+include '../../include/xss_attach.php';
 $tool_content = "";
 $lang_editor = langname_to_code($language);
 $head_content = <<<hContent
@@ -74,10 +75,14 @@ hContent;
 include_once("./config.php");
 include("functions.php"); // application logic for phpBB
 
+if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
+    die('CSRF! Not allowed!');
+}
+
 /******************************************************************************
  * Actual code starts here
  *****************************************************************************/
-if ($is_adminOfCourse) { // course admin 
+if ($is_adminOfCourse) { // course admin
 	if (isset($submit) && $submit) {
 		$sql = "SELECT * FROM posts WHERE post_id = '$post_id'";
 		if (!$result = db_query($sql, $currentCourseID)) {
@@ -96,17 +101,17 @@ if ($is_adminOfCourse) { // course admin
 		$this_post_time = $myrow["post_time"];
 		list($day, $time) = split(" ", $myrow["post_time"]);
 		$date = date("Y-m-d H:i");
-	
+
 		$row1 = mysql_fetch_row(db_query("SELECT forum_name FROM forums WHERE forum_id='$forum_id'"));
 		$forum_name = $row1[0];
 		$row2 = mysql_fetch_row(db_query("SELECT topic_title FROM topics WHERE topic_id='$topic_id'"));
 		$topic_title = $row2[0];
-	
+
 		$nameTools = $langReply;
 		$navigation[] = array ("url"=>"index.php", "name"=> $langForums);
 		$navigation[] = array ("url"=>"viewforum.php?forum=$forum_id", "name"=> $forum_name);
 		$navigation[] = array ("url"=>"viewtopic.php?topic=$topic_id&amp;forum=$forum_id", "name"=> $topic_title);
-	
+
 		// IF we made it this far we are allowed to edit this message, yay!
 		$is_html_disabled = false;
 		if ( (isset($allow_html) && $allow_html == 0) || isset($html) ) {
@@ -146,7 +151,7 @@ if ($is_adminOfCourse) { // course admin
 					$tool_content .= $langUnableUpadateTopic;
 				}
 			}
-			
+
 			$tool_content .= "<div id='operations_container'>
 			<ul id='opslist'>
 			<li><a href='viewtopic.php?topic=$topic_id&amp;forum=$forum_id'>$langViewMsg1</a></li>
@@ -200,7 +205,7 @@ if ($is_adminOfCourse) { // course admin
 			if (@!$topic_removed) {
 				sync($currentCourseID, $topic_id, 'topic');
 			}
-			
+
 			$tool_content .= "<div id='operations_container'>
 			<ul id='opslist'>
 			<li><a href='viewforum.php?forum=$forum_id'>$langReturnTopic</a></li>
@@ -216,25 +221,25 @@ if ($is_adminOfCourse) { // course admin
 		// Gotta handle private forums right here. They're naturally covered on submit, but not in this part.
 		$sql = "SELECT f.forum_type, f.forum_name, t.topic_title
 			FROM forums f, topics t
-			WHERE (f.forum_id = '$forum') AND (t.topic_id = '" . mysql_real_escape_string($topc) . "') AND (t.forum_id = f.forum_id)";
-		
+			WHERE (f.forum_id = '$forum') AND (t.topic_id = '" . mysql_real_escape_string($topic) . "') AND (t.forum_id = f.forum_id)";
+
 		if (!$result = db_query($sql, $currentCourseID)) {
 			$tool_content .= "$langTopicInformation";
 			draw($tool_content, 2, 'phpbb', $head_content);
 			exit();
 		}
-		
+
 		if (!$myrow = mysql_fetch_array($result)) {
 			$tool_content .= "$langErrorTopicSelect";
 			draw($tool_content, 2, 'phpbb', $head_content);
 			exit();
 		}
-		
+
 		$nameTools = $langReply;
 		$navigation[]= array ("url"=>"index.php", "name"=> $langForums);
 		$navigation[]= array ("url"=>"viewforum.php?forum=$forum", "name"=> $myrow['forum_name']);
 		$navigation[]= array ("url"=>"viewtopic.php?topic=$topic&amp;forum=$forum", "name"=> $myrow['topic_title']);
-	
+
 		if (($myrow["forum_type"] == 1) && !$user_logged_in && !$logging_in) {
 			// Private forum, no valid session, and login form not submitted...
 			$tool_content .= "<form action='$_SERVER[PHP_SELF]' method='post'>
@@ -270,11 +275,11 @@ if ($is_adminOfCourse) { // course admin
 				}
 				// Ok, looks like we're good.
 			}
-		}	
-		
-		$sql = "SELECT p.*, pt.post_text, t.topic_title, t.topic_notify, 
-			       t.topic_title, t.topic_notify 
-			FROM posts p, topics t, posts_text pt 
+		}
+
+		$sql = "SELECT p.*, pt.post_text, t.topic_title, t.topic_notify,
+			       t.topic_title, t.topic_notify
+			FROM posts p, topics t, posts_text pt
 			WHERE (p.post_id = '$post_id') AND (pt.post_id = p.post_id) AND (p.topic_id = t.topic_id)";
 
 		if (!$result = db_query($sql, $currentCourseID)) {
@@ -309,8 +314,8 @@ if ($is_adminOfCourse) { // course admin
 		// Special handling for </textarea> tags in the message, which can break the editing form..
 		$message = preg_replace('#</textarea>#si', '&lt;/TEXTAREA&gt;', $message);
 		list($day, $time) = split(" ", $myrow["post_time"]);
-		
-		
+
+
 		$tool_content .= "<div id='operations_container'><ul id='opslist'>
 		<li><a href='viewtopic.php?topic=$topic&amp;forum=$forum' target='_blank'>$langTopicReview</a></li>
 		</ul>
@@ -344,7 +349,7 @@ if ($is_adminOfCourse) { // course admin
 		<td><input type='checkbox' name='delete' /></td>
 		</tr>
 		<tr><th>&nbsp;</th><td>";
-		
+
 		$tool_content .= "
 		<input type='hidden' name='post_id' value='$post_id' />
 		<input type='hidden' name='forum' value='$forum' />
