@@ -44,6 +44,7 @@ $require_prof = true;
 include '../../include/baseTheme.php';
 include '../../include/lib/textLib.inc.php';
 include '../../include/xss_attach.php';
+// include '../../include/CSRF_Protection.php';
 
 // support for math symbols
 include '../../include/phpmathpublisher/mathpublisher.php';
@@ -51,6 +52,8 @@ include '../../include/phpmathpublisher/mathpublisher.php';
 if((!(isset($_SERVER['HTTP_REFERER'], $_SERVER['HTTP_HOST']))) && (!(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)!=$_SERVER['HTTP_HOST'])) ) {
     die('CSRF! Not allowed!');
 }
+
+
 
 $tool_content = $head_content = "";
 $nameTools = $langEditCourseProgram ;
@@ -85,6 +88,7 @@ mysql_select_db($_SESSION['dbname']);
 
 if ($is_adminOfCourse) {
         if (isset($_POST['save'])) {
+          if ($_POST['token'] == $_SESSION['token']){
                 if ($_POST['edIdBloc'] == 'add') {
                         $res = db_query("SELECT MAX(id) FROM course_description");
                         list($max_id) = mysql_fetch_row($res);
@@ -103,6 +107,10 @@ if ($is_adminOfCourse) {
                                 WHERE id = $new_id");
                 header('Location: ' . $urlServer . 'modules/course_description/edit.php');
                 exit;
+          }
+          else{
+            die('CSRF attack! Not allowed!');
+          }
         } elseif (isset($_GET['delete'])) {
                 $del_id = intval($_GET['numBloc']);
 		$res = db_query("DELETE FROM course_description WHERE id = $del_id");
@@ -126,9 +134,12 @@ if ($is_adminOfCourse) {
                                 $numBloc = 'add';
                         }
                 }
-
+                $token = md5(uniqid(rand(), TRUE));
+                $_SESSION['token'] = $token;
+                // $_SESSION['token_time'] = time();
                 $tool_content .= "<form method='post' action='$_SERVER[PHP_SELF]'>
                         <input type='hidden' name='edIdBloc' value='escape_chars($numBloc)' />
+                        <input type='hidden' name='token' value='$token' />
                         <table width='99%' class='FormData' align='left'><tbody>
                            <tr><th class='left' width='220'>$langTitle:</th>
                                <td><b>$title</b>";
