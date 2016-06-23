@@ -291,6 +291,11 @@ function submit_work($id) {
 
 		}
 	} //checks for submission validity end here
+        if (isRarOrZip($_FILES['userfile']['name'])==FALSE){
+            echo 'Only Compressed Files (Rar | Zip) are allowed';
+            $submit_ok = FALSE;
+    }
+
 
   	$res = db_query("SELECT title FROM assignments WHERE id = '$id'");
 	$row = mysql_fetch_array($res);
@@ -1370,5 +1375,23 @@ function show_plain_view($id)
 	create_zip_index("$secret/index.html", $id, TRUE);
 	header("Content-Type: text/html; charset=$charset");
 	readfile("$workPath/$secret/index.html");
-	exit;
+    exit;
 }
+
+function isRarOrZip($file) {
+
+    $fh = @fopen($file, "r");
+
+    $blob = fgets($fh, 5);
+    fclose($fh);
+
+    if (strpos($blob, 'Rar') !== false) {
+        return TRUE;
+    } else
+        if (strpos($blob, 'PK') !== false) {
+        return TRUE;
+        } else {
+            return FALSE;
+        }
+}
+
